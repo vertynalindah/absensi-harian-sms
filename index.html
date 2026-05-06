@@ -916,14 +916,15 @@ async function tambahKaryawan(team) {
 
 // ── INIT ─────────────────────────────────────────────
 window.addEventListener('load', () => {
-  // Coba load dari cache dulu
   const cached = localStorage.getItem('sms_karyawan');
-if (cached) {
+  
+  // Kalau ada cache, langsung tampil
+  if (cached) {
     try {
       DATA.employees = JSON.parse(cached);
       document.getElementById('loading-overlay').style.display='none';
       show('s-login');
-      // Tetap update cache di background
+      // Update cache background
       call({action:'getKaryawan'}).then(data => {
         if(data&&Array.isArray(data)&&data.length>0) {
           DATA.employees = data.map(e=>({
@@ -934,10 +935,21 @@ if (cached) {
           localStorage.setItem('sms_karyawan', JSON.stringify(DATA.employees));
         }
       });
-      return; // stop di sini, tidak perlu nunggu
+      return;
     } catch(e) {}
   }
-  // Tetap load dari Sheets di background untuk update cache
+
+  // Tidak ada cache, load dari Sheets dengan timeout 8 detik
+  let loaded = false;
+  
+  setTimeout(() => {
+    if (!loaded) {
+      loaded = true;
+      document.getElementById('loading-overlay').style.display='none';
+      show('s-login');
+    }
+  }, 8000);
+
   call({action:'getKaryawan'}).then(data => {
     if(data&&Array.isArray(data)&&data.length>0) {
       DATA.employees = data.map(e=>({
@@ -946,10 +958,11 @@ if (cached) {
         safety:e.safety===true||e.safety==='TRUE'||e.safety===1
       }));
       localStorage.setItem('sms_karyawan', JSON.stringify(DATA.employees));
-      if (!cached) {
-        document.getElementById('loading-overlay').style.display='none';
-        show('s-login');
-      }
+    }
+    if (!loaded) {
+      loaded = true;
+      document.getElementById('loading-overlay').style.display='none';
+      show('s-login');
     }
   });
 });
