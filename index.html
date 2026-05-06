@@ -918,11 +918,23 @@ async function tambahKaryawan(team) {
 window.addEventListener('load', () => {
   // Coba load dari cache dulu
   const cached = localStorage.getItem('sms_karyawan');
-  if (cached) {
+if (cached) {
     try {
       DATA.employees = JSON.parse(cached);
       document.getElementById('loading-overlay').style.display='none';
       show('s-login');
+      // Tetap update cache di background
+      call({action:'getKaryawan'}).then(data => {
+        if(data&&Array.isArray(data)&&data.length>0) {
+          DATA.employees = data.map(e=>({
+            id:Number(e.id),team:Number(e.team),name:String(e.name),
+            jabatan:String(e.jabatan||'Helper'),rate:Number(e.rate),
+            safety:e.safety===true||e.safety==='TRUE'||e.safety===1
+          }));
+          localStorage.setItem('sms_karyawan', JSON.stringify(DATA.employees));
+        }
+      });
+      return; // stop di sini, tidak perlu nunggu
     } catch(e) {}
   }
   // Tetap load dari Sheets di background untuk update cache
