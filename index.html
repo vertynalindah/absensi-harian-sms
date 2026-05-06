@@ -668,12 +668,15 @@ async function submitForm() {
   setSyncStatus('loading', 'Mengirim ke Google Sheets...');
 
   const action = currentFormType==='masuk'?'inputMasuk':'inputPulang';
-  const results = await Promise.all(dipilih.map(emp =>
-    call({action, data:JSON.stringify(
-      currentFormType==='masuk'
-        ? {proj, tanggal:tgl, nama:emp.name, jam:jamStr, noBreak}
-        : {proj, tanggal:tgl, nama:emp.name, jam:jamStr}
-    )})
+  const results = [];
+    for (const emp of dipilih) {
+    const res = await call({action, data:JSON.stringify(
+    currentFormType==='masuk'
+      ? {proj, tanggal:tgl, nama:emp.name, jam:jamStr, noBreak}
+      : {proj, tanggal:tgl, nama:emp.name, jam:jamStr}
+    )});
+    results.push(res);
+    }
   ));
 
   const berhasil = results.filter(r => r && r.success).length;
